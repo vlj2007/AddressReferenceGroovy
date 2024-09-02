@@ -1,4 +1,4 @@
-package ru.eltex_co.AddressReferenceGroovy
+package ru.eltex_co.AddressReferenceGroovy;
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -9,45 +9,43 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
+
 class Connection {
 
-    private static final String URI = "https://eltex-co.ru/test/users.php";
-    private static final String FILE = "Users.csv";
+    static final String URI = "https://eltex-co.ru/test/users.php"
 
-    static void main(String[] args) throws IOException, InterruptedException, URISyntaxException{
+    static final String FILE = "Users.csv"
 
-        HttpClient client = HttpClient.newHttpClient();
+    static void main(String[] args) throws IOException, InterruptedException, URISyntaxException {
+
+        HttpClient client = HttpClient.newHttpClient()
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(new URI(URI))
                 .GET()
-                .build();
+                .build()
 
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString())
 
-        Gson gson = new Gson();
-        List<User> users = gson.fromJson(response.body(), new TypeToken<List<User>>() {
-        }.getType());
+        Gson gson = new Gson()
+        List<User> users = gson.fromJson(response.body(), new TypeToken<List<User>>() {}.getType())
 
         List<User> filteredUsers = users.stream()
-                .filter(user -> user.getSalary() > 3500)
-                .sorted(Comparator.comparing(User::getName))
-                .toList();
+                .filter { user -> user.salary > 3500 }
+                .sorted(Comparator.comparing { User.name })
+                .toList()
 
-        try (FileWriter fileWriter = new FileWriter(FILE);
-             CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT.withHeader("Id", "Name", "Email", "Salary"))) {
+        FileWriter fileWriter = new FileWriter(FILE)
+        CSVPrinter csvPrinter = new CSVPrinter(fileWriter, CSVFormat.DEFAULT.builder().setHeader("Id", "Name", "Email", "Salary").build())
 
-            for (User u : filteredUsers) {
-                csvPrinter.printRecord(u.getId(), u.getName(), u.getEmail(), u.getSalary());
+        try {
+            filteredUsers.each { User user ->
+                csvPrinter.printRecord(user.id, user.name, user.email, user.salary)
             }
-        } catch (IOException e) {
-            System.out.println("Error creating CSV file: " + e.getMessage());
+        } finally {
+            fileWriter.close()
+            csvPrinter.close()
         }
-
-
-
-
     }
-
-
-
 }
+
+
